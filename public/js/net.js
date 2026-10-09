@@ -22,7 +22,7 @@ export class Net {
     ws.onopen = () => { this.delay = 500; this.send({ t: "hello", token: this.token ?? undefined, gm: this.gmKey ?? undefined }); };
     ws.onmessage = (ev) => {
       let m; try { m = JSON.parse(ev.data); } catch { return; }
-      if (m.t === "welcome") { this.token = m.token; write(m.token); this.up = true; this.h.onLink?.(true); this.h.onMsg?.(m); }
+      if (m.t === "welcome") { if (m.token) { this.token = m.token; write(m.token); } this.up = true; this.h.onLink?.(true); this.h.onMsg?.(m); }
       else if (m.t === "state") { this.offset = m.s.now - Date.now(); this.h.onState?.(m.s, m.me, m.gm); }
       else if (m.t === "me") this.h.onMe?.(m.me);
       else this.h.onMsg?.(m);
@@ -35,6 +35,11 @@ export class Net {
     };
     ws.onerror = () => {};
   }
+
+  /** Sign in with a Google ID token; the server answers with its own session token. */
+  google(credential) { return this.send({ t: "hello", google: credential, gm: this.gmKey ?? undefined }); }
+  /** Forget this browser's session. */
+  signOut() { this.token = null; try { localStorage.removeItem(KEY); } catch { /* no storage */ } }
 
   send(m) { if (this.ws?.readyState === 1) { this.ws.send(JSON.stringify(m)); return true; } return false; }
 }

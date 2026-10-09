@@ -662,3 +662,8 @@
 
 .gsn-chat-row > small.gsn-chat-mad { font-family: var(--gsn-text); font-style: normal; font-size: 11.5px; line-height: 1.45; color: #cdbfe0; padding-left: 7px; border-left: 2px solid #a45cff; margin-top: 2px; }
 .gsn-chat-mad b { color: #e3c8ff; }
+
+/* v0.2.3: boon tiers */
+.gsn-bpips { display: flex; flex-direction: column; gap: 3px; flex: none; width: 8px; }
+.gsn-bpips i { width: 6px; height: 6px; transform: rotate(45deg); background: var(--gsn-gold); box-shadow: 0 0 6px rgba(227, 195, 118, 0.7); }
+.gsn-boon.is-t3 { background: linear-gradient(90deg, rgba(227, 195, 118, 0.16), transparent 70%), #0d0b0c; border-color: #5a4a22; }

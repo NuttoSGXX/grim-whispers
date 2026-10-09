@@ -87,3 +87,18 @@ html, body { margin: 0; min-height: 100%; background: #060405; color-scheme: dar
 .gd-viewers .is-banned b { text-decoration: line-through; }
 .gd-viewers button { padding: 2px 7px; font-size: 9px; }
 .gd-url { font-family: var(--gsn-text); font-style: normal; color: #fff4dc; user-select: all; }
+
+/* v0.2 */
+.gd-find { width: 100%; height: 30px; padding: 0 9px; font-family: var(--gsn-text); font-size: 13px; color: #f3ead6; background: #0a0809; border: 1px solid #33181b; border-radius: 0; }
+.gd-viewers > div { grid-template-columns: auto 1fr auto auto auto auto; }
+.gd-give { display: flex; border: 1px solid #5a4a22; }
+.gd .gd-give button { padding: 2px 8px; border: 0; border-left: 1px solid #3a3018; font-family: var(--gsn-num); font-size: 12px; letter-spacing: 0; color: #e3c376; background: #14100a; }
+.gd .gd-give button:first-child { border-left: 0; }
+.gd .gd-give button:hover { color: #1a1206; background: #e3c376; }
+.gd-held { font-style: normal; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #e3c376; white-space: nowrap; }
+.gd-queue { border-color: #5a4a22; }
+.gd-queue::before { border-color: #e3c376; }
+.gd-opt.is-light { --side: #e3c376; }
+.gd-opt b small { font-family: var(--gsn-display); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: #8d8474; margin-left: 6px; }
+.gd-sub { font-family: var(--gsn-text); font-size: 11.5px; color: #a89f8e; }
+.gd-row .gd-switch { text-transform: uppercase; }

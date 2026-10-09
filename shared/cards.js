@@ -129,17 +129,45 @@ export const DARK = [
   }
 ];
 
-/** auto: what the module can do by itself when the boon is granted. */
+/**
+ * The Light's boons. tier 1-3 is how much help it is; scenes says where it fits
+ * (travel, combat, social, camp). auto = what the module applies by itself when it is granted.
+ */
 export const LIGHT = [
-  { id: "warning-call", th: { name: "ลางเตือน", effect: "ปาร์ตี้ไม่ถูก surprise ใน encounter ถัดไป", told: "เสียงหินร่วงดังขึ้นก่อนเวลาอันควร" }, en: { name: "Warning Call", effect: "The party cannot be surprised in the next encounter.", told: "A stone falls a moment too early." } },
-  { id: "clear-water", th: { name: "ตาน้ำ", effect: "เจอแหล่งน้ำและอาหารพอสำหรับ 1 วัน", told: "ตาน้ำเล็ก ๆ ที่มีเห็ดกินได้ขึ้นรอบ" }, en: { name: "Clear Water", effect: "The party finds water and food for 1 day.", told: "A small spring, ringed with edible fungus." } },
-  { id: "faint-glimmer", auto: "restore", th: { name: "แสงรำไร", effect: "ตัวละครที่เต๋าร้าวมากที่สุดได้เต๋าคืน 1 ลูก", told: "แสงอุ่นวูบหนึ่งที่ไม่มีที่มา" }, en: { name: "Faint Glimmer", effect: "The character with the most cracked dice mends 1 die.", told: "A warm flicker of light with no source." } },
-  { id: "lifting-fog", auto: "cleanse", th: { name: "หมอกจาง", effect: "ตัวละครหนึ่งตัวหายจากอาการที่ติดอยู่", told: "เสียงในหัวเงียบลงเป็นครั้งแรก" }, en: { name: "Lifting Fog", effect: "One character is freed from their symptom.", told: "For the first time, the voice in your head goes quiet." } },
-  { id: "second-breath", th: { name: "ลมปราณ", effect: "ตัวละครทุกตัวฟื้น HP เท่ากับ Hit Die 1 ลูก โดยไม่เสีย Hit Die", told: "ลมเย็นพัดมาจากทางที่ไม่ควรมีลม" }, en: { name: "Second Breath", effect: "Every character regains HP equal to one Hit Die, without spending it.", told: "A cool wind blows from where no wind should be." } },
-  { id: "glowing-tracks", th: { name: "รอยเรือง", effect: "advantage กับการทอยนำทางครั้งถัดไป", told: "ไลเคนเรืองแสงเรียงเป็นแนว" }, en: { name: "Glowing Tracks", effect: "Advantage on the next navigation roll.", told: "Glowing lichen grows in a line." } },
-  { id: "shortcut", th: { name: "ทางลัด", effect: "ย่นการเดินทางครึ่งวัน", told: "ช่องแคบที่ไม่อยู่ในแผนที่ของใคร" }, en: { name: "The Shortcut", effect: "Half a day is cut from the journey.", told: "A narrow passage on no one's map." } },
-  { id: "heart-ward", auto: "ward", th: { name: "เกราะใจ", effect: "การดวลเต๋าครั้งถัดไป เสมอผู้เล่นชนะ", told: "ความทรงจำดี ๆ ผุดขึ้นมาพร้อมกันทั้งกลุ่ม" }, en: { name: "Heart Ward", effect: "In the next duel, ties go to the players.", told: "A good memory rises in all of you at once." } }
+  // ----- travel -----
+  { id: "glowing-tracks", tier: 1, scenes: ["travel"], th: { name: "รอยเรือง", effect: "advantage กับการทอยนำทางครั้งถัดไป", told: "ไลเคนเรืองแสงเรียงเป็นแนว" }, en: { name: "Glowing Tracks", effect: "Advantage on the next navigation roll.", told: "Glowing lichen grows in a line." } },
+  { id: "clear-water", tier: 1, scenes: ["travel", "camp"], th: { name: "ตาน้ำ", effect: "เจอแหล่งน้ำและอาหารพอสำหรับ 1 วัน", told: "ตาน้ำเล็ก ๆ ที่มีเห็ดกินได้ขึ้นรอบ" }, en: { name: "Clear Water", effect: "The party finds water and food for 1 day.", told: "A small spring, ringed with edible fungus." } },
+  { id: "abandoned-pack", tier: 2, scenes: ["travel"], th: { name: "ของที่ถูกทิ้ง", effect: "เจอสัมภาระที่ถูกทิ้งไว้: เสบียง 1d4 วัน และของใช้หนึ่งอย่างที่ DM เลือก (เชือก คบไฟ หรือ healer's kit)", told: "เป้ใบหนึ่งพิงผนังถ้ำ เจ้าของไม่กลับมาแล้ว" }, en: { name: "The Abandoned Pack", effect: "The party finds a discarded pack: 1d4 days of rations and one useful item of the GM's choice (rope, torches or a healer's kit).", told: "A pack leans against the cavern wall. Its owner is not coming back." } },
+  { id: "shortcut", tier: 2, scenes: ["travel"], th: { name: "ทางลัด", effect: "ย่นการเดินทางครึ่งวัน", told: "ช่องแคบที่ไม่อยู่ในแผนที่ของใคร" }, en: { name: "The Shortcut", effect: "Half a day is cut from the journey.", told: "A narrow passage on no one's map." } },
+  { id: "the-guide", tier: 3, scenes: ["travel"], th: { name: "ผู้นำทาง", effect: "มีผู้นำทางที่เป็นมิตรร่วมทาง 1 วัน: ไม่หลงทาง และไม่ต้องทอย random encounter", told: "ร่างเล็ก ๆ ถือโคมเห็ดเดินนำอยู่ข้างหน้า ไม่พูดอะไรสักคำ" }, en: { name: "The Guide", effect: "A friendly guide travels with the party for 1 day: they cannot become lost and no random encounters are rolled.", told: "A small figure with a mushroom lantern walks ahead and never says a word." } },
+  // ----- combat -----
+  { id: "warning-call", tier: 1, scenes: ["combat", "travel"], th: { name: "ลางเตือน", effect: "ปาร์ตี้ไม่ถูก surprise ใน encounter ถัดไป", told: "เสียงหินร่วงดังขึ้นก่อนเวลาอันควร" }, en: { name: "Warning Call", effect: "The party cannot be surprised in the next encounter.", told: "A stone falls a moment too early." } },
+  { id: "second-breath", tier: 1, scenes: ["combat"], th: { name: "ลมปราณ", effect: "ตัวละครทุกตัวฟื้น HP เท่ากับ Hit Die 1 ลูก โดยไม่เสีย Hit Die", told: "ลมเย็นพัดมาจากทางที่ไม่ควรมีลม" }, en: { name: "Second Breath", effect: "Every character regains HP equal to one Hit Die, without spending it.", told: "A cool wind blows from where no wind should be." } },
+  { id: "hidden-vials", tier: 2, scenes: ["combat", "travel"], th: { name: "ขวดยาในซอกหิน", effect: "ปาร์ตี้เจอ potion of healing 2 ขวด", told: "แก้วสีแดงสองขวดวางอยู่ในซอกหิน ฝุ่นยังไม่ทันจับ" }, en: { name: "Vials in the Rock", effect: "The party finds 2 potions of healing.", told: "Two red vials rest in a crack in the stone, not yet dusty." } },
+  { id: "the-opening", tier: 2, scenes: ["combat"], th: { name: "ช่องโหว่", effect: "ศัตรูเสียจังหวะ: การโจมตีครั้งแรกของตัวละครแต่ละคนในรอบถัดไปได้ advantage", told: "ชั่วอึดใจหนึ่ง ทุกอย่างเคลื่อนช้าลง ยกเว้นพวกคุณ" }, en: { name: "The Opening", effect: "The enemy falters: each character's first attack next round has advantage.", told: "For one breath everything slows, except you." } },
+  { id: "unseen-hand", tier: 3, scenes: ["combat"], th: { name: "มือที่มองไม่เห็น", effect: "DM เลือกหนึ่งอย่าง: ตัวละครที่ HP 0 หนึ่งคนกลับมามี 1 HP หรือศัตรูหนึ่งตัวเสียเทิร์นถัดไป", told: "มีอะไรบางอย่างดึงคุณกลับมาจากขอบเหว" }, en: { name: "The Unseen Hand", effect: "The GM chooses one: a character at 0 HP returns to 1 HP, or one enemy loses its next turn.", told: "Something pulls you back from the edge." } },
+  // ----- social -----
+  { id: "kind-stranger", tier: 1, scenes: ["social"], th: { name: "คนแปลกหน้าใจดี", effect: "ท่าทีของ NPC หนึ่งคนในซีนดีขึ้นหนึ่งขั้น", told: "ใครบางคนในฝูงชนยิ้มให้ เหมือนรู้จักกันมานาน" }, en: { name: "The Kind Stranger", effect: "One NPC's attitude in this scene improves by one step.", told: "Someone in the crowd smiles as if they had always known you." } },
+  { id: "overheard", tier: 1, scenes: ["social", "travel"], th: { name: "คำใบ้ที่ลอยมา", effect: "DM ให้คำใบ้ที่เป็นจริงหนึ่งข้อเกี่ยวกับเป้าหมายตอนนี้ของปาร์ตี้", told: "ประโยคหนึ่งหลุดมาจากวงสนทนาข้าง ๆ พอดีกับที่คุณเดินผ่าน" }, en: { name: "Overheard", effect: "The GM gives one true clue about the party's current goal.", told: "A sentence slips out of a nearby conversation just as you pass." } },
+  { id: "open-door", tier: 2, scenes: ["social"], th: { name: "ประตูที่เปิดรอ", effect: "มีคนรับรองให้ปาร์ตี้: เข้าถึงสถานที่หรือบุคคลที่ปกติปิดอยู่ได้หนึ่งครั้ง หรือได้ราคายุติธรรม", told: "\"พวกนี้มากับข้า\" เสียงหนึ่งพูดขึ้นจากด้านหลัง" }, en: { name: "The Open Door", effect: "Someone vouches for the party: one place or person that was closed to them opens, or they get a fair price.", told: "\"They are with me,\" says a voice behind you." } },
+  { id: "heart-ward", tier: 2, scenes: ["social", "combat", "travel", "camp"], auto: "ward", th: { name: "เกราะใจ", effect: "การดวลเต๋าครั้งถัดไป เสมอผู้เล่นชนะ", told: "ความทรงจำดี ๆ ผุดขึ้นมาพร้อมกันทั้งกลุ่ม" }, en: { name: "Heart Ward", effect: "In the next duel, ties go to the players.", told: "A good memory rises in all of you at once." } },
+  { id: "old-debt", tier: 3, scenes: ["social"], th: { name: "หนี้บุญคุณ", effect: "NPC คนหนึ่งติดค้างบุญคุณปาร์ตี้: ขอความช่วยเหลือครั้งสำคัญได้หนึ่งครั้ง (ที่พัก ทางผ่าน หรือข้อมูล)", told: "\"ข้าจำหน้าพวกเจ้าได้ ครั้งหนึ่งมีคนอย่างพวกเจ้าช่วยข้าไว้\"" }, en: { name: "The Old Debt", effect: "An NPC owes the party: one significant favour (shelter, passage or information).", told: "\"I know your kind. One of you saved me once.\"" } },
+  // ----- camp -----
+  { id: "faint-glimmer", tier: 1, scenes: ["camp", "travel"], auto: "restore", th: { name: "แสงรำไร", effect: "ตัวละครที่เต๋าร้าวมากที่สุดได้เต๋าคืน 1 ลูก", told: "แสงอุ่นวูบหนึ่งที่ไม่มีที่มา" }, en: { name: "Faint Glimmer", effect: "The character with the most cracked dice mends 1 die.", told: "A warm flicker of light with no source." } },
+  { id: "warm-fire", tier: 1, scenes: ["camp"], th: { name: "ไฟอุ่น", effect: "หลังการพักครั้งนี้ ทุกคนได้ temporary HP เท่ากับเลเวลของตัวเอง", told: "คืนนี้ไฟติดง่าย และไม่มีใครฝันร้าย" }, en: { name: "The Warm Fire", effect: "After this rest every character gains temporary HP equal to their level.", told: "The fire catches easily tonight, and no one dreams badly." } },
+  { id: "lifting-fog", tier: 2, scenes: ["camp", "social"], auto: "cleanse", th: { name: "หมอกจาง", effect: "ตัวละครหนึ่งตัวหายจากอาการที่ติดอยู่", told: "เสียงในหัวเงียบลงเป็นครั้งแรก" }, en: { name: "Lifting Fog", effect: "One character is freed from their symptom.", told: "For the first time, the voice in your head goes quiet." } },
+  { id: "quiet-night", tier: 2, scenes: ["camp"], th: { name: "คืนสงบ", effect: "การพักครั้งนี้ไม่มี random encounter และ Madness ชั่วครู่ของทุกคนสิ้นสุด", told: "ความมืดรอบค่ายคืนนี้เป็นแค่ความมืด" }, en: { name: "The Quiet Night", effect: "No random encounter during this rest, and every short-term madness ends.", told: "Tonight the dark around the camp is only dark." } },
+  { id: "dawn", tier: 3, scenes: ["camp"], auto: "restoreAll", th: { name: "รุ่งอรุณ", effect: "ตัวละครทุกตัวได้เต๋าสติคืน 1 ลูก", told: "ไม่มีดวงอาทิตย์ที่นี่ แต่ทุกคนตื่นมาพร้อมความรู้สึกว่าเช้าแล้ว" }, en: { name: "Dawn", effect: "Every character mends 1 Sanity Die.", told: "There is no sun down here, yet everyone wakes feeling that morning has come." } }
 ];
+
+export const SCENES = { travel: "Travel", combat: "Combat", social: "Social", camp: "Camp" };
+
+/** Boons the GM has left open. deck = { off: {id:true}, cap: 1-3, scene: "travel"|...|"all"|"sealed" } */
+export function openBoons(deck = {}) {
+  const cap = Number(deck.cap) || 3, scene = deck.scene ?? "all";
+  if (scene === "sealed") return [];
+  return LIGHT.filter((b) => !deck.off?.[b.id] && b.tier <= cap && (scene === "all" || b.scenes.includes(scene)));
+}
 
 const of = (...suits) => DARK.filter((c) => suits.includes(c.suit)).map((c) => c.id);
 

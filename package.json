@@ -1,10 +1,10 @@
 {
   "name": "grim-whispers",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Audience server for Grim Sanity: viewers pick Darkness or Light, fill a gauge, vote on cards and roll the Trauma Dice.",
   "type": "module",
   "private": true,
   "engines": { "node": ">=18" },
-  "scripts": { "start": "node server/index.js", "test": "node test/engine.test.js" },
+  "scripts": { "start": "node server/index.js", "test": "node test/engine.test.js && node test/google.test.js" },
   "dependencies": { "ws": "^8.18.0" }
 }

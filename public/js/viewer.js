@@ -5,6 +5,8 @@ import { Field } from "./fx.js";
 import { sigil } from "./art.js";
 import { cardById, boonById, SUITS, TIER, TIER_LABEL } from "/shared/cards.js";
 
+const CFG = await fetch("/config.json").then((r) => r.json()).catch(() => ({ googleClientId: null, loginRequired: false }));
+
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = (sel, root = document) => root.querySelector(sel);
 const app = $("#app");
@@ -14,7 +16,7 @@ const SIDE = {
 };
 const WHY = { locked: "ห้วงลึกยังเงียบอยู่", full: "เกจเต็มแล้ว", spent: "ฝ่ายคุณใช้ครบแล้วในไลฟ์นี้", energy: "แรงหมด รอสักครู่" };
 
-const st = { s: null, me: null, up: false, screen: null, overlay: null, draft: { name: "", side: null }, dice: [], fx: null, joining: false, peek: null };
+const st = { s: null, me: null, up: false, screen: null, overlay: null, draft: { name: "", side: null }, dice: [], fx: null, joining: false, peek: null, authed: false, needLogin: false, pick: null };
 try { st.draft.name = localStorage.getItem("grim-whispers-name") ?? ""; } catch { /* no storage */ }
 
 const net = new Net({
@@ -22,7 +24,13 @@ const net = new Net({
   onState(s, me) { st.s = s; st.me = me; render(); },
   onMe(me) { st.me = me; update(); },
   onMsg(m) {
-    if (m.t === "joined") { st.joining = false; if (!m.ok) toast(m.why === "name" ? "ใส่ชื่อก่อนนะ" : "เลือกฝ่ายก่อนนะ"); }
+    if (m.t === "welcome") {
+      st.needLogin = !!m.needLogin; st.authed = !!m.google;
+      if (m.loginError) toast("เข้าสู่ระบบไม่สำเร็จ ลองอีกครั้ง");
+      if (m.name && !st.draft.name) st.draft.name = m.name;
+      st.screen = null; render();                     // the join screen depends on whether we are signed in
+    }
+    else if (m.t === "joined") { st.joining = false; if (!m.ok) toast(m.why === "name" ? "ใส่ชื่อก่อนนะ" : m.why === "login" ? "เข้าสู่ระบบก่อนนะ" : "เลือกฝ่ายก่อนนะ"); }
     else if (m.t === "no" && WHY[m.why]) toast(WHY[m.why]);
   }
 });
@@ -65,6 +73,7 @@ function render() {
     app.className = `gw is-${screen}${me ? ` is-${me.side}` : ""}${st.up ? "" : " is-offline"}`;
     app.innerHTML = screen === "join" ? joinHtml() : mainHtml();
     if (screen === "main") { st.fx = new Field($(".gw-fx"), { low: false }); st.fx.ambient = 5; }
+    else googleButton();
   }
   update();
 }
@@ -75,15 +84,24 @@ function joinHtml() {
       <span class="gw-side-art">${sigil(SIDE[k].art)}</span>
       <b>${SIDE[k].name}</b><span>${SIDE[k].role}</span><em data-count="${k}"></em>
     </button>`;
-  return `
-    <div class="gw-join">
+  const head = `
       <div class="gw-kicker"><span>Out of the Abyss</span></div>
       <h1>เสียงกระซิบ<br>แห่งห้วงลึก</h1>
-      <p class="gw-lead">คืนนี้คุณไม่ได้แค่ดู คุณคือส่วนหนึ่งของ Underdark</p>
+      <p class="gw-lead">คืนนี้คุณไม่ได้แค่ดู คุณคือส่วนหนึ่งของ Underdark</p>`;
+  if (CFG.googleClientId && !st.authed && (CFG.loginRequired || st.needLogin)) {
+    return `<div class="gw-join">${head}
+      <p class="gw-note">เข้าสู่ระบบด้วย Google เพื่อเลือกฝ่าย หนึ่งบัญชีมีหนึ่งเสียง</p>
+      <div class="gw-google" id="gw-google"></div>
+      <p class="gw-note gw-fine">เราใช้แค่ชื่อของคุณเพื่อแสดงบนจอ ไม่เก็บอีเมลหรือข้อมูลอื่น</p></div>`;
+  }
+  return `
+    <div class="gw-join">${head}
+      ${CFG.googleClientId && !st.authed ? `<div class="gw-google" id="gw-google"></div><p class="gw-note gw-fine">หรือเข้าร่วมแบบไม่ล็อกอินด้านล่าง</p>` : ""}
       <label class="gw-field"><span>ชื่อที่จะขึ้นบนจอ</span><input id="gw-name" type="text" maxlength="20" autocomplete="nickname" enterkeyhint="done" value="${esc(st.draft.name)}" placeholder="ชื่อของคุณ"></label>
       <div class="gw-sides">${side("dark")}${side("light")}</div>
       <p class="gw-note">เลือกแล้วเปลี่ยนฝ่ายไม่ได้จนจบไลฟ์</p>
       <button type="button" class="gw-go" data-join disabled>ก้าวลงสู่ห้วงลึก</button>
+      ${st.authed ? `<button type="button" class="gw-linkbtn" data-signout>ออกจากระบบ</button>` : ""}
     </div>`;
 }
 
@@ -110,7 +128,9 @@ function mainHtml() {
       <div class="gw-energy" data-energy></div>
       <div class="gw-next" data-next></div>
       <div class="gw-status" data-status></div>
+      <div class="gw-weight" data-weight hidden></div>
     </section>
+    <div class="gw-waiting" data-waiting hidden></div>
     <section class="gw-tops"><h3>${sd.top}</h3><ol data-tops></ol></section>
     <div class="gw-overlay" data-overlay hidden></div>
     <div class="gw-link">กำลังเชื่อมต่อใหม่…</div>`;
@@ -141,6 +161,10 @@ function update() {
   const press = $("[data-press]"); press.classList.toggle("is-off", !can); press.classList.toggle("is-full", mine.full && !mine.spent);
   $("[data-status]").textContent = me.banned ? "คุณถูกระงับจากไลฟ์นี้" : mine.spent ? `ฝ่าย${SIDE[me.side].name}ใช้ครบ ${s.maxFills} ครั้งในไลฟ์นี้แล้ว` : mine.full ? "เกจเต็มแล้ว! รอ DM เปิดโหวต" : mine.locked ? "ห้วงลึกยังเงียบอยู่ รอ DM เปิดเกจ" : me.contrib ? `รอบนี้คุณส่งแรงไปแล้ว ${me.contrib} ครั้ง` : "กดเพื่อส่งแรงเข้าเกจฝ่ายคุณ";
   $("[data-tops]").innerHTML = mine.top.length ? mine.top.map((t) => `<li><b>${esc(t.name)}</b><span>${t.n}</span></li>`).join("") : `<li class="is-empty">ยังไม่มีใครเริ่ม</li>`;
+  const w = $("[data-weight]");
+  if (w) { w.hidden = !(mine.weight > 1); w.textContent = `ฝ่ายคุณคนน้อยกว่า กดหนึ่งครั้งได้ ${mine.weight} แต้ม`; }
+  const q = $("[data-waiting]");
+  if (q) { q.hidden = !s.waiting?.length; q.textContent = s.waiting?.length ? `รอเล่น: ${s.waiting.map((x) => `${x.name} (${SIDE[x.side].name} ระดับ ${x.level})`).join(", ")}` : ""; }
   tickClock();
   overlay();
 }
@@ -165,12 +189,14 @@ function clearDice() { for (const d of st.dice) d.destroy(); st.dice = []; }
 
 function overlay() {
   const { s, me } = st, p = s.phase, el = $("[data-overlay]"); if (!el) return;
-  const key = p.kind === "idle" ? null : p.kind === "vote" ? `vote:${p.options.join()}` : p.card ? `dark:${p.card}` : `light:${p.boon}`;
+  const gift = p.kind === "idle" && me.gift ? me.gift : null;
+  const key = gift ? `gift:${gift.level}:${gift.options.join()}` : p.kind === "idle" ? null : p.kind === "vote" ? `vote:${p.options.join()}` : p.card ? `dark:${p.card}` : `light:${p.boon}`;
   if (key !== st.overlay) {
-    st.overlay = key; st.peek = null; clearDice();
-    el.hidden = !key; el.className = `gw-overlay${key ? ` is-${p.side}` : ""}`;
+    st.overlay = key; st.peek = null; st.pick = null; clearDice();
+    el.hidden = !key; el.className = `gw-overlay${key ? ` is-${gift ? me.side : p.side}` : ""}`;
     if (!key) { el.innerHTML = ""; return; }
-    if (p.kind === "vote") el.innerHTML = voteHtml(p);
+    if (gift) el.innerHTML = giftHtml(gift);
+    else if (p.kind === "vote") el.innerHTML = voteHtml(p);
     else if (p.card) {
       el.innerHTML = roundHtml(p);
       const row = $(".gw-dice", el);
@@ -182,8 +208,38 @@ function overlay() {
       }
     } else el.innerHTML = boonHtml(p);
   }
-  if (p.kind === "vote") updateVote(p);
+  if (gift) updateGift(gift);
+  else if (p.kind === "vote") updateVote(p);
   else if (p.card) updateRound(p);
+}
+
+/* ---------- a pick the GM gave this viewer ---------- */
+const tierPips = (n) => `<span class="gw-tier">${"<i></i>".repeat(n)}</span>`;
+
+function giftHtml(g) {
+  const dark = st.me.side === "dark";
+  const opts = g.options.map((id) => {
+    if (dark) return `<button type="button" class="gw-opt" data-pick="${id}">${cardHtml(id, { compact: true })}</button>`;
+    const b = boonById(id);
+    return `<button type="button" class="gw-opt is-boon" data-pick="${id}">${tierPips(b.tier)}<b>${esc(b.th.name)}</b><p>${esc(b.th.effect)}</p></button>`;
+  }).join("");
+  return `
+    <div class="gw-sheet">
+      <div class="gw-kicker"><span>${dark ? "ของกำนัลจากห้วงลึก" : "ของกำนัลจากแสง"}</span></div>
+      <h2>คุณได้สิทธิ์เลือก${dark ? "การ์ด" : "พร"}ระดับ ${g.level}</h2>
+      ${g.options.length ? `<div class="gw-opts${dark ? "" : " is-boons"}">${opts}</div>
+      ${dark ? `<div class="gw-detail" data-detail></div>` : ""}
+      <button type="button" class="gw-go" data-confirm disabled>ยืนยัน</button>
+      <p class="gw-note">เลือกแล้วเปลี่ยนไม่ได้ DM จะเล่น${dark ? "การ์ด" : "พร"}ใบนี้เมื่อถึงจังหวะ</p>`
+      : `<p class="gw-note">ตอนนี้ยังไม่มี${dark ? "การ์ด" : "พร"}ระดับนี้เปิดอยู่ รอ DM สักครู่ หน้านี้จะอัปเดตเอง</p>`}
+    </div>`;
+}
+
+function updateGift(g) {
+  for (const id of g.options) $(`[data-pick="${id}"]`)?.classList.toggle("on", st.pick === id);
+  const det = $("[data-detail]");
+  if (det) { const c = cardById(st.pick); det.innerHTML = c ? `<b>${esc(c.th.name)}</b><p>${esc(c.th.board)}</p><p class="is-symptom">${esc(c.th.symptom)}</p>` : `<em>แตะการ์ดเพื่ออ่านว่าจะเกิดอะไรขึ้น</em>`; }
+  const go = $("[data-confirm]"); if (go) go.disabled = !g.options.includes(st.pick);
 }
 
 function voteHtml(p) {
@@ -191,7 +247,7 @@ function voteHtml(p) {
   const opts = p.options.map((id) => {
     if (dark) return `<button type="button" class="gw-opt" data-vote="${id}">${cardHtml(id, { compact: true })}<div class="gw-opt-meter"><i data-meter="${id}"></i></div><span data-votes="${id}"></span></button>`;
     const b = boonById(id);
-    return `<button type="button" class="gw-opt is-boon" data-vote="${id}" ${mine ? "" : "disabled"}><b>${esc(b.th.name)}</b><p>${esc(b.th.effect)}</p><div class="gw-opt-meter"><i data-meter="${id}"></i></div><span data-votes="${id}"></span></button>`;
+    return `<button type="button" class="gw-opt is-boon" data-vote="${id}" ${mine ? "" : "disabled"}>${tierPips(b.tier)}<b>${esc(b.th.name)}</b><p>${esc(b.th.effect)}</p><div class="gw-opt-meter"><i data-meter="${id}"></i></div><span data-votes="${id}"></span></button>`;
   }).join("");
   return `
     <div class="gw-sheet">
@@ -221,7 +277,7 @@ function updateVote(p) {
 function roundHtml(p) {
   return `
     <div class="gw-sheet">
-      <div class="gw-kicker"><span>ห้วงลึกเลือกแล้ว</span></div>
+      <div class="gw-kicker"><span>${p.by ? `การ์ดจาก ${esc(p.by)}` : "ห้วงลึกเลือกแล้ว"}</span></div>
       <div class="gw-round-card">${cardHtml(p.card)}</div>
       <h2 data-title></h2>
       <div class="gw-timer" data-timer></div>
@@ -252,7 +308,8 @@ function boonHtml(p) {
   return `
     <div class="gw-sheet is-boon-result">
       <div class="gw-boon-art">${sigil("light")}</div>
-      <div class="gw-kicker"><span>แสงส่องลงมา</span></div>
+      <div class="gw-kicker"><span>${p.by ? `พรจาก ${esc(p.by)}` : "แสงส่องลงมา"}</span></div>
+      ${tierPips(b.tier)}
       <h2 class="gw-boon-name">${esc(b.th.name)}</h2>
       <p class="gw-boon-effect">${esc(b.th.effect)}</p>
       <p class="gw-note">${esc(b.th.told)}</p>
@@ -285,7 +342,10 @@ app.addEventListener("click", (ev) => {
     if (p.side === st.me.side && net.send({ t: "vote", option: d.vote })) { st.me.vote = d.vote; navigator.vibrate?.(10); }
     return updateVote(p);
   }
-  if ("roll" in d) { b.hidden = true; net.send({ t: "roll" }); navigator.vibrate?.(30); }
+  if ("roll" in d) { b.hidden = true; net.send({ t: "roll" }); navigator.vibrate?.(30); return; }
+  if (d.pick) { st.pick = d.pick; if (st.me?.gift) updateGift(st.me.gift); return; }
+  if ("confirm" in d) { if (st.pick && net.send({ t: "choose", option: st.pick })) { b.disabled = true; navigator.vibrate?.(30); } return; }
+  if ("signout" in d) { net.signOut(); location.reload(); }
 });
 
 // The press button answers on pointerdown, so fast tapping feels immediate.
@@ -302,10 +362,22 @@ app.addEventListener("pointerdown", (ev) => {
   // show the result at once; the server's answer follows and corrects it if needed
   st.me.energy--; st.me.contrib++;
   if (st.me.nextAt == null) st.me.nextAt = net.now() + st.s.regenMs;
-  const mine = st.s.sides[st.me.side]; mine.gauge = Math.min(mine.target, mine.gauge + 1);
+  const mine = st.s.sides[st.me.side]; mine.gauge = Math.min(mine.target, Math.round((mine.gauge + (mine.weight ?? 1)) * 10) / 10);
   update();
   b.classList.remove("is-hit"); void b.offsetWidth; b.classList.add("is-hit");
   const r = b.getBoundingClientRect();
   st.fx?.burst(SIDE[st.me.side].fx, r.left + r.width / 2, r.top + r.height / 2, r.width * 0.5, 14);
   navigator.vibrate?.(12);
 });
+
+/* ---------- Google sign-in ---------- */
+let gsi = null;
+function googleButton() {
+  const host = document.getElementById("gw-google"); if (!host || !CFG.googleClientId) return;
+  gsi ??= new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+  gsi.then(() => {
+    const el = document.getElementById("gw-google"); if (!el || !globalThis.google?.accounts?.id) return;
+    google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: (r) => { if (r?.credential && !net.google(r.credential)) toast("ยังเชื่อมต่อไม่ได้ ลองอีกครั้ง"); } });
+    google.accounts.id.renderButton(el, { theme: "filled_black", size: "large", shape: "rectangular", text: "signin_with", locale: "th", width: Math.min(360, el.clientWidth || 300) });
+  }).catch(() => { const el = document.getElementById("gw-google"); if (el) el.textContent = "โหลดปุ่ม Google ไม่ได้ ตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้า"; });
+}
